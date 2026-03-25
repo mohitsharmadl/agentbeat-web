@@ -16,15 +16,29 @@ function StatCard({
   label,
   value,
   color,
+  borderClass,
+  icon,
 }: {
   label: string;
   value: string | number;
   color?: string;
+  borderClass?: string;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <p className="text-sm text-gray-500 font-medium">{label}</p>
-      <p className={cn("text-2xl font-bold mt-1", color || "text-gray-900")}>
+    <div className={cn(
+      "bg-white rounded-xl border border-gray-200 p-5 card-hover",
+      borderClass
+    )}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm text-gray-500 font-medium">{label}</p>
+        {icon && (
+          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+            {icon}
+          </div>
+        )}
+      </div>
+      <p className={cn("text-2xl font-bold", color || "text-gray-900")}>
         {value}
       </p>
     </div>
@@ -35,11 +49,11 @@ function AgentCard({ agent }: { agent: Agent }) {
   return (
     <Link
       href={`/agent?id=${agent.id}`}
-      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all"
+      className="block bg-white rounded-xl border border-gray-200 p-5 card-hover hover:border-emerald/30 group"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{agent.name}</h3>
+          <h3 className="font-semibold text-gray-900 truncate group-hover:text-emerald-700">{agent.name}</h3>
           {agent.description && (
             <p className="text-sm text-gray-500 mt-0.5 truncate">
               {agent.description}
@@ -49,10 +63,15 @@ function AgentCard({ agent }: { agent: Agent }) {
         <StatusBadge status={agent.status} />
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>Last run: {agent.last_run_at ? relativeTime(agent.last_run_at) : "Never"}</span>
+      <div className="flex items-center justify-between text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
+        <span className="flex items-center gap-1">
+          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {agent.last_run_at ? relativeTime(agent.last_run_at) : "Never"}
+        </span>
         {agent.expected_interval_secs && (
-          <span>Every {agent.expected_interval_secs}s</span>
+          <span className="text-gray-400">Every {agent.expected_interval_secs}s</span>
         )}
       </div>
 
@@ -155,8 +174,8 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
   -H "X-Agent-Token: ${createdAgent.token}" > /dev/null`;
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in-up">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
@@ -227,7 +246,7 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
 
             <button
               onClick={onClose}
-              className="w-full py-2.5 px-4 bg-emerald hover:bg-emerald-dark text-white rounded-lg text-sm font-medium transition-colors"
+              className="w-full py-2.5 px-4 bg-emerald hover:bg-emerald-dark text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald/20"
             >
               Done
             </button>
@@ -238,8 +257,8 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-up">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-1">Create Agent</h2>
           <p className="text-sm text-gray-500 mb-6">
@@ -257,7 +276,7 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="My Trading Bot"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
               />
             </div>
 
@@ -271,7 +290,7 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="my-trading-bot"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
               />
               <p className="text-xs text-gray-400 mt-1">Used in API endpoints: /a/{slug}/heartbeat</p>
             </div>
@@ -285,7 +304,7 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Trades NIFTY futures using RL"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
               />
             </div>
 
@@ -298,13 +317,13 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
                 placeholder="60"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald"
               />
               <p className="text-xs text-gray-400 mt-1">Alert if no heartbeat within this interval + grace period (5min default)</p>
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
                 {error}
               </p>
             )}
@@ -313,14 +332,14 @@ curl -s ${API_URL}/a/${createdAgent.slug}/heartbeat \\
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 px-4 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 px-4 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2.5 px-4 bg-emerald hover:bg-emerald-dark text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 px-4 bg-emerald hover:bg-emerald-dark text-white rounded-xl text-sm font-semibold disabled:opacity-50 shadow-lg shadow-emerald/20"
               >
                 {loading ? "Creating..." : "Create Agent"}
               </button>
@@ -345,6 +364,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
+      {/* Welcome header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -354,7 +374,7 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2.5 bg-emerald hover:bg-emerald-dark text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 bg-emerald hover:bg-emerald-dark text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-emerald/20"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -377,16 +397,66 @@ export default function DashboardPage() {
         </div>
       ) : summary ? (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatCard label="Total Agents" value={summary.total} />
-          <StatCard label="Healthy" value={summary.healthy} color="text-green-600" />
-          <StatCard label="Failing" value={summary.failing} color="text-red-600" />
-          <StatCard label="Silent" value={summary.silent} color="text-red-600" />
-          <StatCard label="Total Cost" value={formatCost(overview?.total_cost || 0)} />
+          <StatCard
+            label="Total Agents"
+            value={summary.total}
+            borderClass="stat-card-blue"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Healthy"
+            value={summary.healthy}
+            color="text-green-600"
+            borderClass="stat-card-green"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Failing"
+            value={summary.failing}
+            color="text-red-600"
+            borderClass="stat-card-red"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Silent"
+            value={summary.silent}
+            color="text-amber-600"
+            borderClass="stat-card-amber"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Total Cost"
+            value={formatCost(overview?.total_cost || 0)}
+            borderClass="stat-card-purple"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
         </div>
       ) : null}
 
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Agents</h2>
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">Agents</h2>
+        <span className="text-sm text-gray-400">{agents.length} total</span>
       </div>
 
       {isLoading ? (

@@ -61,8 +61,8 @@ export default function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-navy-dark min-h-screen text-white">
         <div className="px-6 py-5 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald to-emerald-dark flex items-center justify-center shadow-lg shadow-emerald/20">
               <svg
                 className="w-5 h-5 text-white"
                 fill="none"
@@ -77,7 +77,7 @@ export default function Sidebar() {
                 />
               </svg>
             </div>
-            <span className="text-lg font-bold">AgentBeat</span>
+            <span className="text-lg font-bold tracking-tight">AgentBeat</span>
           </Link>
         </div>
 
@@ -90,12 +90,16 @@ export default function Sidebar() {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium",
                   isActive
-                    ? "bg-emerald/20 text-emerald"
+                    ? "bg-emerald/15 text-emerald"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
                 )}
               >
+                {/* Active indicator bar */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-emerald rounded-r-full" />
+                )}
                 {item.icon}
                 {item.label}
               </Link>
@@ -103,10 +107,22 @@ export default function Sidebar() {
           })}
         </nav>
 
+        {/* User section at bottom */}
         <div className="px-3 py-4 border-t border-white/10">
+          {/* User avatar/initial */}
+          <div className="flex items-center gap-3 px-3 py-2.5 mb-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald/30 to-emerald/10 flex items-center justify-center text-xs font-bold text-emerald">
+              U
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-200 truncate">User</p>
+              <p className="text-xs text-gray-500 truncate">Free plan</p>
+            </div>
+          </div>
+
           <button
             onClick={logout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 w-full transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 w-full"
           >
             <svg
               className="w-5 h-5"
@@ -137,10 +153,13 @@ export default function Sidebar() {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1 text-xs",
+                  "relative flex flex-col items-center gap-1 px-3 py-1 text-xs",
                   isActive ? "text-emerald" : "text-gray-400"
                 )}
               >
+                {isActive && (
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-emerald rounded-full" />
+                )}
                 {item.icon}
                 {item.label}
               </Link>
