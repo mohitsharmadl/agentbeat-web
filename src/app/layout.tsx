@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
-import AppShell from "@/components/AppShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,8 +14,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentBeat - AI Agent Monitoring",
-  description: "Production monitoring dashboard for AI agents",
+  title: "AgentBeat - Production Monitoring for AI Agents",
+  description:
+    "Know when your agents fail, overspend, or go silent. Heartbeat monitoring, cost tracking, and failure detection for AI agents and automated workflows.",
 };
 
 export default function RootLayout({
@@ -30,9 +30,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

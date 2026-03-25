@@ -1,21 +1,20 @@
 "use client";
 
 import { useAuth } from "@/lib/auth";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated && pathname !== "/login") {
+    if (!isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -23,10 +22,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="w-8 h-8 border-2 border-emerald border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  }
-
-  if (pathname === "/login") {
-    return <>{children}</>;
   }
 
   if (!isAuthenticated) {

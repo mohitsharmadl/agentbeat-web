@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 const navItems = [
   {
     label: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: (
       <svg
         className="w-5 h-5"
@@ -21,25 +21,6 @@ const navItems = [
           strokeLinejoin="round"
           strokeWidth={2}
           d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: "Agents",
-    href: "/",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
         />
       </svg>
     ),
@@ -102,14 +83,7 @@ export default function Sidebar() {
 
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/" ||
-                  (item.label === "Agents" && pathname.startsWith("/agents"))
-                : pathname.startsWith(item.href);
-
-            // Dashboard and Agents both point to "/" so deduplicate
-            if (item.label === "Agents") return null;
+            const isActive = pathname.startsWith(item.href);
 
             return (
               <Link
@@ -155,28 +129,23 @@ export default function Sidebar() {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-dark border-t border-white/10 z-50">
         <div className="flex justify-around py-2">
-          {navItems
-            .filter((item) => item.label !== "Agents")
-            .map((item) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/" || pathname.startsWith("/agents")
-                  : pathname.startsWith(item.href);
+          {navItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
 
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-1 text-xs",
-                    isActive ? "text-emerald" : "text-gray-400"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              );
-            })}
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-1 text-xs",
+                  isActive ? "text-emerald" : "text-gray-400"
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

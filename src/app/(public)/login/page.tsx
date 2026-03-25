@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       const res = await syncUser(email, name);
       login(res.api_key);
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

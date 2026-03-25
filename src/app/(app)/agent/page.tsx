@@ -296,7 +296,7 @@ curl -X POST ${API_URL}/a/${agent.slug}/complete \\
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-emerald-600 transition-colors">
+        <Link href="/dashboard" className="hover:text-emerald-600 transition-colors">
           Dashboard
         </Link>
         <span>/</span>
