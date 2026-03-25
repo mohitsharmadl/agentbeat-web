@@ -6,6 +6,8 @@ import {
   createAlertChannel,
   deleteAlertChannel,
   generateTelegramLink,
+  createCheckout,
+  getCustomerPortal,
 } from "@/lib/api";
 import type { AlertChannel } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -122,6 +124,47 @@ export default function SettingsPage() {
             {apiKey ? maskToken(apiKey) : "No API key"}
           </code>
           {apiKey && <CopyButton text={apiKey} />}
+        </div>
+      </div>
+
+      {/* Plan & Billing */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-8">
+        <h2 className="text-sm font-medium text-gray-700 mb-3">Plan</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald/10 text-emerald-700">
+            FREE
+          </span>
+          <span className="text-sm text-gray-500">3 agents, unlimited runs</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={async () => {
+              try {
+                const res = await createCheckout("PRO");
+                window.location.href = res.checkout_url;
+              } catch {
+                alert("Billing not available yet. Coming soon!");
+              }
+            }}
+            className="px-4 py-3 border border-gray-200 rounded-lg text-left hover:border-emerald-300 transition-colors"
+          >
+            <div className="font-semibold text-gray-900">Pro — $19/mo</div>
+            <div className="text-xs text-gray-500 mt-1">100 agents, all alert channels, 30-day retention</div>
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await createCheckout("BUSINESS");
+                window.location.href = res.checkout_url;
+              } catch {
+                alert("Billing not available yet. Coming soon!");
+              }
+            }}
+            className="px-4 py-3 border border-gray-200 rounded-lg text-left hover:border-emerald-300 transition-colors"
+          >
+            <div className="font-semibold text-gray-900">Business — $49/mo</div>
+            <div className="text-xs text-gray-500 mt-1">500 agents, team access, 90-day retention</div>
+          </button>
         </div>
       </div>
 

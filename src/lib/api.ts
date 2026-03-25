@@ -228,6 +228,20 @@ export function createAlertChannel(data: {
   });
 }
 
+// Billing
+export function createCheckout(plan: "PRO" | "BUSINESS") {
+  return apiFetch<{ checkout_url: string }>("/api/billing/checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function getCustomerPortal() {
+  return apiFetch<{ portal_url: string }>("/api/billing/portal", {
+    method: "POST",
+  });
+}
+
 export function generateTelegramLink() {
   return apiFetch<{ code: string; bot_url: string }>("/api/telegram/link", {
     method: "POST",

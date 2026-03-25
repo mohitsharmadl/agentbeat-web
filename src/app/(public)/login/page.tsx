@@ -20,7 +20,7 @@ declare global {
 
 const GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  "315819757300-m1bbfvketub92hq39p36lijk4kpkii3o.apps.googleusercontent.com";
+  "475630045235-e5vikjc671ie90bilar9kjjesus7uve0.apps.googleusercontent.com";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
