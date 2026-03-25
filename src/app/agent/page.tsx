@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   getAgent,
@@ -21,6 +22,7 @@ import {
 import StatusBadge from "@/components/StatusBadge";
 import CopyButton from "@/components/CopyButton";
 import EmptyState from "@/components/EmptyState";
+import { Suspense } from "react";
 
 type Tab = "runs" | "stats" | "incidents";
 
@@ -41,7 +43,7 @@ function RunRow({ run }: { run: Run }) {
       setStepsLoading(true);
       try {
         const data = await getRunSteps(run.id);
-        setSteps(data);
+        setSteps(data.steps);
       } catch {
         setSteps([]);
       } finally {
@@ -52,9 +54,12 @@ function RunRow({ run }: { run: Run }) {
 
   const statusColors: Record<string, string> = {
     success: "bg-green-100 text-green-800",
+    completed: "bg-green-100 text-green-800",
     failure: "bg-red-100 text-red-800",
+    failed: "bg-red-100 text-red-800",
     partial: "bg-yellow-100 text-yellow-800",
     timeout: "bg-orange-100 text-orange-800",
+    started: "bg-blue-100 text-blue-800",
   };
 
   return (
@@ -89,7 +94,9 @@ function RunRow({ run }: { run: Run }) {
           {run.model || "-"}
         </td>
         <td className="px-4 py-3 text-sm text-gray-600">
-          {run.confidence !== null ? `${(run.confidence * 100).toFixed(0)}%` : "-"}
+          {run.confidence !== null && run.confidence !== undefined
+            ? `${(run.confidence * 100).toFixed(0)}%`
+            : "-"}
         </td>
         <td className="px-4 py-3 text-sm text-gray-400">
           <svg
@@ -126,7 +133,7 @@ function RunRow({ run }: { run: Run }) {
                     className="flex items-center gap-4 text-sm bg-white rounded-lg px-4 py-2 border border-gray-100"
                   >
                     <span className="text-gray-400 font-mono text-xs w-6">
-                      #{step.step_number}
+                      #{step.seq}
                     </span>
                     <span className="font-medium text-gray-700 flex-1">
                       {step.name}
@@ -134,9 +141,9 @@ function RunRow({ run }: { run: Run }) {
                     <span
                       className={cn(
                         "px-2 py-0.5 rounded-full text-xs capitalize",
-                        step.status === "success"
+                        step.status === "completed"
                           ? "bg-green-100 text-green-700"
-                          : step.status === "failure"
+                          : step.status === "failed"
                           ? "bg-red-100 text-red-700"
                           : "bg-gray-100 text-gray-600"
                       )}
@@ -146,7 +153,7 @@ function RunRow({ run }: { run: Run }) {
                     <span className="text-gray-500 text-xs">
                       {formatDuration(step.duration_ms)}
                     </span>
-                    {step.cost !== null && (
+                    {step.cost !== null && step.cost !== undefined && (
                       <span className="text-gray-500 text-xs">
                         {formatCost(step.cost)}
                       </span>
@@ -184,13 +191,13 @@ function BarChart({
   color,
 }: {
   data: DailyStat[];
-  dataKey: "runs" | "cost" | "failures";
+  dataKey: keyof DailyStat;
   label: string;
   color: string;
 }) {
   if (data.length === 0) return null;
 
-  const values = data.map((d) => d[dataKey]);
+  const values = data.map((d) => Number(d[dataKey]) || 0);
   const max = Math.max(...values, 1);
 
   return (
@@ -198,10 +205,11 @@ function BarChart({
       <h3 className="text-sm font-medium text-gray-700 mb-4">{label}</h3>
       <div className="flex items-end gap-1 h-32">
         {data.map((d) => {
-          const height = (d[dataKey] / max) * 100;
+          const val = Number(d[dataKey]) || 0;
+          const height = (val / max) * 100;
           return (
             <div
-              key={d.date}
+              key={d.day}
               className="flex-1 flex flex-col items-center gap-1 group relative"
             >
               <div
@@ -213,26 +221,23 @@ function BarChart({
                 }}
               />
               <div className="absolute bottom-full mb-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                {d.date}: {dataKey === "cost" ? formatCost(d[dataKey]) : d[dataKey]}
+                {d.day}: {dataKey === "total_cost_usd" ? formatCost(val) : val}
               </div>
             </div>
           );
         })}
       </div>
       <div className="flex justify-between text-xs text-gray-400 mt-2">
-        <span>{data[0]?.date}</span>
-        <span>{data[data.length - 1]?.date}</span>
+        <span>{data[0]?.day}</span>
+        <span>{data[data.length - 1]?.day}</span>
       </div>
     </div>
   );
 }
 
-export default function AgentDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+function AgentDetailInner() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id") || "";
   const [tab, setTab] = useState<Tab>("runs");
 
   const { data: agent, isLoading: agentLoading } = useFetch<Agent>(
@@ -251,6 +256,14 @@ export default function AgentDetailPage({
     useCallback(() => getAgentIncidents(id), [id]),
     [id]
   );
+
+  if (!id) {
+    return (
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+        <EmptyState title="No agent selected" description="Go back to the dashboard to select an agent." />
+      </div>
+    );
+  }
 
   if (agentLoading) {
     return (
@@ -272,72 +285,74 @@ export default function AgentDetailPage({
     );
   }
 
-  const curlSnippet = `curl -X POST ${API_URL}/api/agents/${agent.slug}/runs \\
-  -H "Authorization: Bearer ${agent.token}" \\
+  const curlSnippet = `curl -X POST ${API_URL}/a/${agent.slug}/start \\
+  -H "X-Agent-Token: ${agent.token}"
+
+curl -X POST ${API_URL}/a/${agent.slug}/complete \\
+  -H "X-Agent-Token: ${agent.token}" \\
   -H "Content-Type: application/json" \\
-  -d '{
-    "status": "success",
-    "duration_ms": 1500,
-    "items_processed": 42,
-    "cost": 0.0023,
-    "model": "gpt-4o",
-    "confidence": 0.95
-  }'`;
+  -d '{"items_processed": 42, "cost_usd": 0.12}'`;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-emerald transition-colors">
+        <Link href="/" className="hover:text-emerald-600 transition-colors">
           Dashboard
         </Link>
         <span>/</span>
         <span className="text-gray-900">{agent.name}</span>
       </div>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold text-gray-900">{agent.name}</h1>
-            <StatusBadge status={agent.status} size="md" />
+            <StatusBadge status={agent.status} />
           </div>
           {agent.description && (
             <p className="text-gray-500">{agent.description}</p>
           )}
+          {agent.tags && agent.tags.length > 0 && (
+            <div className="flex gap-1.5 mt-2">
+              {agent.tags.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Config + Token */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Configuration</h3>
           <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-gray-500">Expected Interval</dt>
-              <dd className="font-medium">{agent.expected_interval_minutes} min</dd>
-            </div>
+            {agent.expected_interval_secs && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Expected Interval</dt>
+                <dd className="font-medium">{agent.expected_interval_secs}s</dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-gray-500">Grace Period</dt>
-              <dd className="font-medium">{agent.grace_period_minutes} min</dd>
+              <dd className="font-medium">{agent.grace_secs}s</dd>
             </div>
-            {agent.budget_limit && (
+            {agent.budget_limit_usd && (
               <div className="flex justify-between">
                 <dt className="text-gray-500">Budget Limit</dt>
                 <dd className="font-medium">
-                  {formatCost(agent.budget_limit)} / {agent.budget_window}
+                  {formatCost(agent.budget_limit_usd)} / {agent.budget_window}
                 </dd>
               </div>
             )}
-            {agent.max_cost_per_run && (
-              <div className="flex justify-between">
-                <dt className="text-gray-500">Max Cost/Run</dt>
-                <dd className="font-medium">{formatCost(agent.max_cost_per_run)}</dd>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Budget Spent</dt>
+              <dd className="font-medium">{formatCost(agent.budget_spent_usd)}</dd>
+            </div>
             <div className="flex justify-between">
               <dt className="text-gray-500">Last Run</dt>
-              <dd className="font-medium">{relativeTime(agent.last_run_at)}</dd>
+              <dd className="font-medium">{agent.last_run_at ? relativeTime(agent.last_run_at) : "Never"}</dd>
             </div>
           </dl>
         </div>
@@ -351,9 +366,7 @@ export default function AgentDetailPage({
             <CopyButton text={agent.token} />
           </div>
 
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
-            Integration
-          </h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Integration</h3>
           <div className="relative">
             <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto">
               {curlSnippet}
@@ -365,7 +378,6 @@ export default function AgentDetailPage({
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <div className="flex gap-6">
           {(["runs", "stats", "incidents"] as Tab[]).map((t) => (
@@ -375,7 +387,7 @@ export default function AgentDetailPage({
               className={cn(
                 "pb-3 text-sm font-medium capitalize transition-colors border-b-2",
                 tab === t
-                  ? "border-emerald text-emerald"
+                  ? "border-emerald-500 text-emerald-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               )}
             >
@@ -390,7 +402,6 @@ export default function AgentDetailPage({
         </div>
       </div>
 
-      {/* Tab content */}
       {tab === "runs" && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {runs && runs.length > 0 ? (
@@ -398,27 +409,13 @@ export default function AgentDetailPage({
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Started
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Duration
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Items
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Cost
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Model
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Confidence
-                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Started</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confidence</th>
                     <th className="px-4 py-3 w-10" />
                   </tr>
                 </thead>
@@ -432,7 +429,7 @@ export default function AgentDetailPage({
           ) : (
             <EmptyState
               title="No runs yet"
-              description="This agent hasn't reported any runs. Use the integration code above to send your first run."
+              description="This agent hasn't reported any runs. Use the integration code above to get started."
             />
           )}
         </div>
@@ -442,31 +439,13 @@ export default function AgentDetailPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {dailyStats && dailyStats.length > 0 ? (
             <>
-              <BarChart
-                data={dailyStats}
-                dataKey="runs"
-                label="Runs per Day"
-                color="#10b981"
-              />
-              <BarChart
-                data={dailyStats}
-                dataKey="cost"
-                label="Cost per Day"
-                color="#6366f1"
-              />
-              <BarChart
-                data={dailyStats}
-                dataKey="failures"
-                label="Failures per Day"
-                color="#ef4444"
-              />
+              <BarChart data={dailyStats} dataKey="total_runs" label="Runs per Day" color="#10b981" />
+              <BarChart data={dailyStats} dataKey="total_cost_usd" label="Cost per Day" color="#6366f1" />
+              <BarChart data={dailyStats} dataKey="failed_runs" label="Failures per Day" color="#ef4444" />
             </>
           ) : (
             <div className="col-span-2">
-              <EmptyState
-                title="No stats yet"
-                description="Stats will appear once the agent has been running for at least a day."
-              />
+              <EmptyState title="No stats yet" description="Stats appear after the agent has been running for at least a day." />
             </div>
           )}
         </div>
@@ -479,40 +458,26 @@ export default function AgentDetailPage({
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Started
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Resolved
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Details
-                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Started</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resolved</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {incidents.map((incident) => (
                     <tr key={incident.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                          {incident.type.replace(/_/g, " ")}
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 capitalize">
+                          {incident.type}
                         </span>
                       </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{relativeTime(incident.started_at)}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {relativeTime(incident.started_at)}
+                        {incident.resolved_at ? relativeTime(incident.resolved_at) : <span className="text-red-600 font-medium">Ongoing</span>}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {incident.resolved_at ? (
-                          relativeTime(incident.resolved_at)
-                        ) : (
-                          <span className="text-red-600 font-medium">Ongoing</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
-                        {incident.details}
+                        {incident.duration_secs ? `${Math.round(incident.duration_secs / 60)}m` : "-"}
                       </td>
                     </tr>
                   ))}
@@ -520,13 +485,18 @@ export default function AgentDetailPage({
               </table>
             </div>
           ) : (
-            <EmptyState
-              title="No incidents"
-              description="No incidents have been recorded for this agent. That's a good thing!"
-            />
+            <EmptyState title="No incidents" description="No incidents recorded. That's a good thing!" />
           )}
         </div>
       )}
     </div>
+  );
+}
+
+export default function AgentDetailPage() {
+  return (
+    <Suspense fallback={<div className="p-8 animate-pulse"><div className="h-6 bg-gray-200 rounded w-48 mb-4" /></div>}>
+      <AgentDetailInner />
+    </Suspense>
   );
 }

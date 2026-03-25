@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import {
   getAlertChannels,
   createAlertChannel,
-  toggleAlertChannel,
   deleteAlertChannel,
 } from "@/lib/api";
 import type { AlertChannel } from "@/lib/api";
@@ -68,13 +67,8 @@ export default function SettingsPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const handleToggle = async (id: string, enabled: boolean) => {
-    try {
-      await toggleAlertChannel(id, !enabled);
-      refetch();
-    } catch {
-      // silently fail
-    }
+  const handleToggle = async (_id: string, _enabled: boolean) => {
+    // Toggle not supported yet — delete and recreate instead
   };
 
   const handleDelete = async (id: string) => {

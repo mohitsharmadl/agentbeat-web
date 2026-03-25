@@ -37,7 +37,7 @@ export async function apiFetch<T = unknown>(
 // Auth
 export interface SyncUserResponse {
   api_key: string;
-  user_id: string;
+  id: string;
 }
 
 export function syncUser(email: string, name: string) {
@@ -47,33 +47,37 @@ export function syncUser(email: string, name: string) {
   });
 }
 
-// Agents
+// Agents — matches backend model.Agent
 export interface Agent {
   id: string;
   user_id: string;
   name: string;
-  description: string;
   slug: string;
   token: string;
-  status: "healthy" | "degraded" | "failing" | "silent" | "new";
-  expected_interval_minutes: number;
-  grace_period_minutes: number;
-  max_cost_per_run: number | null;
-  budget_limit: number | null;
-  budget_window: string | null;
+  description: string;
   tags: string[];
+  expected_interval_secs: number | null;
+  grace_secs: number;
+  budget_limit_usd: number | null;
+  budget_window: string;
+  budget_spent_usd: number;
+  budget_window_start: string | null;
+  status: "healthy" | "degraded" | "failing" | "silent" | "new";
   last_run_at: string | null;
+  next_expected: string | null;
   created_at: string;
-  updated_at: string;
 }
 
-export interface AgentStats {
-  total: number;
-  healthy: number;
-  failing: number;
-  silent: number;
-  degraded: number;
-  new_count: number;
+export interface DashboardOverview {
+  agents: Agent[];
+  summary: {
+    total: number;
+    healthy: number;
+    degraded: number;
+    failing: number;
+    silent: number;
+    new: number;
+  };
   total_cost: number;
 }
 
@@ -85,42 +89,49 @@ export function getAgent(id: string) {
   return apiFetch<Agent>(`/api/agents/${id}`);
 }
 
-export function getAgentStats() {
-  return apiFetch<AgentStats>("/api/agents/stats");
+export function getDashboardOverview() {
+  return apiFetch<DashboardOverview>("/api/dashboard/overview");
 }
 
-// Runs
+// Runs — matches backend model.Run
 export interface Run {
   id: string;
   agent_id: string;
-  status: "success" | "failure" | "partial" | "timeout";
+  status: string;
   started_at: string;
-  ended_at: string | null;
+  completed_at: string | null;
   duration_ms: number | null;
+  exit_code: number | null;
   items_processed: number | null;
+  items_failed: number | null;
+  error_message: string | null;
+  error_count: number;
   cost: number | null;
+  tokens_input: number | null;
+  tokens_output: number | null;
   model: string | null;
   confidence: number | null;
-  error_message: string | null;
   metadata: Record<string, unknown> | null;
-  created_at: string;
+  source_ip: string;
+  sdk_version: string;
 }
 
 export interface Step {
   id: string;
   run_id: string;
-  step_number: number;
+  agent_id: string;
   name: string;
-  status: "success" | "failure" | "skipped";
+  seq: number;
+  status: string;
   started_at: string;
-  ended_at: string | null;
+  completed_at: string | null;
   duration_ms: number | null;
-  input_tokens: number | null;
-  output_tokens: number | null;
   cost: number | null;
+  tokens_input: number | null;
+  tokens_output: number | null;
   model: string | null;
   error_message: string | null;
-  created_at: string;
+  metadata: Record<string, unknown> | null;
 }
 
 export function getAgentRuns(agentId: string, limit = 50) {
@@ -128,36 +139,45 @@ export function getAgentRuns(agentId: string, limit = 50) {
 }
 
 export function getRunSteps(runId: string) {
-  return apiFetch<Step[]>(`/api/runs/${runId}/steps`);
+  return apiFetch<{ run: Run; steps: Step[] }>(`/api/agents/_/runs/${runId}`);
 }
 
-// Incidents
+// Incidents — matches backend model.Incident
 export interface Incident {
   id: string;
   agent_id: string;
-  type: "missing_run" | "budget_exceeded" | "consecutive_failures" | "low_confidence";
+  type: string;
   started_at: string;
   resolved_at: string | null;
-  details: string;
-  created_at: string;
+  duration_secs: number | null;
+  alert_sent: boolean;
+  details: Record<string, unknown>;
+  agent_name?: string;
 }
 
 export function getAgentIncidents(agentId: string) {
   return apiFetch<Incident[]>(`/api/agents/${agentId}/incidents`);
 }
 
-// Daily stats
+// Daily stats — matches backend model.DailyStat
 export interface DailyStat {
-  date: string;
-  runs: number;
-  cost: number;
-  failures: number;
+  agent_id: string;
+  day: string;
+  total_runs: number;
+  completed_runs: number;
+  failed_runs: number;
+  total_cost_usd: number;
+  total_tokens_in: number;
+  total_tokens_out: number;
+  avg_duration_ms: number | null;
+  p95_duration_ms: number | null;
+  avg_confidence: number | null;
+  items_processed: number;
+  items_failed: number;
 }
 
 export function getAgentDailyStats(agentId: string, days = 30) {
-  return apiFetch<DailyStat[]>(
-    `/api/agents/${agentId}/stats/daily?days=${days}`
-  );
+  return apiFetch<DailyStat[]>(`/api/agents/${agentId}/stats?days=${days}`);
 }
 
 // Alert channels
@@ -181,13 +201,6 @@ export function createAlertChannel(data: {
   return apiFetch<AlertChannel>("/api/alert-channels", {
     method: "POST",
     body: JSON.stringify(data),
-  });
-}
-
-export function toggleAlertChannel(id: string, enabled: boolean) {
-  return apiFetch<AlertChannel>(`/api/alert-channels/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ enabled }),
   });
 }
 

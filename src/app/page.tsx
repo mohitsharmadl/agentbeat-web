@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { getAgents, getAgentStats } from "@/lib/api";
-import type { Agent, AgentStats } from "@/lib/api";
+import { getDashboardOverview } from "@/lib/api";
+import type { Agent, DashboardOverview } from "@/lib/api";
 import { useFetch } from "@/lib/hooks";
 import { relativeTime, formatCost, cn } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
+import { useCallback } from "react";
 
 function StatCard({
   label,
@@ -30,8 +31,8 @@ function StatCard({
 function AgentCard({ agent }: { agent: Agent }) {
   return (
     <Link
-      href={`/agents/${agent.id}`}
-      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-emerald/50 hover:shadow-sm transition-all"
+      href={`/agent?id=${agent.id}`}
+      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
@@ -46,8 +47,10 @@ function AgentCard({ agent }: { agent: Agent }) {
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>Last run: {relativeTime(agent.last_run_at)}</span>
-        <span>Every {agent.expected_interval_minutes}m</span>
+        <span>Last run: {agent.last_run_at ? relativeTime(agent.last_run_at) : "Never"}</span>
+        {agent.expected_interval_secs && (
+          <span>Every {agent.expected_interval_secs}s</span>
+        )}
       </div>
 
       {agent.tags && agent.tags.length > 0 && (
@@ -67,18 +70,14 @@ function AgentCard({ agent }: { agent: Agent }) {
 }
 
 export default function DashboardPage() {
-  const { data: stats, isLoading: statsLoading } = useFetch<AgentStats>(
-    getAgentStats,
-    [],
-    { refreshInterval: 30000 }
-  );
-  const { data: agents, isLoading: agentsLoading } = useFetch<Agent[]>(
-    getAgents,
+  const { data: overview, isLoading } = useFetch<DashboardOverview>(
+    useCallback(() => getDashboardOverview(), []),
     [],
     { refreshInterval: 30000 }
   );
 
-  const isLoading = statsLoading || agentsLoading;
+  const agents = overview?.agents || [];
+  const summary = overview?.summary;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -89,7 +88,6 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats cards */}
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[...Array(5)].map((_, i) => (
@@ -102,33 +100,16 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : stats ? (
+      ) : summary ? (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatCard label="Total Agents" value={stats.total} />
-          <StatCard
-            label="Healthy"
-            value={stats.healthy}
-            color="text-green-600"
-          />
-          <StatCard
-            label="Failing"
-            value={stats.failing}
-            color="text-red-600"
-          />
-          <StatCard
-            label="Silent"
-            value={stats.silent}
-            color="text-red-600"
-          />
-          <StatCard
-            label="Total Cost"
-            value={formatCost(stats.total_cost)}
-            color="text-gray-900"
-          />
+          <StatCard label="Total Agents" value={summary.total} />
+          <StatCard label="Healthy" value={summary.healthy} color="text-green-600" />
+          <StatCard label="Failing" value={summary.failing} color="text-red-600" />
+          <StatCard label="Silent" value={summary.silent} color="text-red-600" />
+          <StatCard label="Total Cost" value={formatCost(overview?.total_cost || 0)} />
         </div>
       ) : null}
 
-      {/* Agent list */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Agents</h2>
       </div>
@@ -146,7 +127,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : agents && agents.length > 0 ? (
+      ) : agents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {agents.map((agent) => (
             <AgentCard key={agent.id} agent={agent} />
@@ -155,7 +136,7 @@ export default function DashboardPage() {
       ) : (
         <EmptyState
           title="No agents yet"
-          description="Create your first agent to start monitoring. Agents will appear here once they send their first heartbeat."
+          description="Create your first agent to start monitoring."
         />
       )}
     </div>
