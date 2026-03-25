@@ -285,22 +285,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social proof */}
-      <section className="bg-white border-b border-gray-100 py-10">
-        <div className="max-w-6xl mx-auto px-6">
-          <p className="text-center text-sm text-gray-400 font-medium uppercase tracking-wider mb-6">
-            Trusted by developers and teams at
-          </p>
-          <div className="flex items-center justify-center gap-8 md:gap-14 flex-wrap">
-            {socialProofLogos.map((name) => (
-              <span key={name} className="text-gray-300 font-semibold text-lg tracking-tight">
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* How it works */}
       <section id="how-it-works" className="bg-white py-24 md:py-28">
         <div className="max-w-6xl mx-auto px-6">
