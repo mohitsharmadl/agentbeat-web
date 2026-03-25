@@ -30,18 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("agentpulse_api_key");
+    const stored = localStorage.getItem("agentbeat_api_key");
     setApiKey(stored);
     setIsLoading(false);
   }, []);
 
   const login = useCallback((key: string) => {
-    localStorage.setItem("agentpulse_api_key", key);
+    localStorage.setItem("agentbeat_api_key", key);
     setApiKey(key);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("agentpulse_api_key");
+    localStorage.removeItem("agentbeat_api_key");
     setApiKey(null);
   }, []);
 

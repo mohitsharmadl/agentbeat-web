@@ -14,7 +14,7 @@ export async function apiFetch<T = unknown>(
 ): Promise<T> {
   const apiKey =
     typeof window !== "undefined"
-      ? localStorage.getItem("agentpulse_api_key")
+      ? localStorage.getItem("agentbeat_api_key")
       : null;
 
   const res = await fetch(`${API_URL}${path}`, {

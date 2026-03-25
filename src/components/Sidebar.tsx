@@ -96,7 +96,7 @@ export default function Sidebar() {
                 />
               </svg>
             </div>
-            <span className="text-lg font-bold">AgentPulse</span>
+            <span className="text-lg font-bold">AgentBeat</span>
           </Link>
         </div>
 

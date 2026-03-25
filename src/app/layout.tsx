@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentPulse - AI Agent Monitoring",
+  title: "AgentBeat - AI Agent Monitoring",
   description: "Production monitoring dashboard for AI agents",
 };
 

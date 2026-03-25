@@ -48,7 +48,7 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">AgentPulse</h1>
+          <h1 className="text-2xl font-bold text-gray-900">AgentBeat</h1>
           <p className="text-sm text-gray-500 mt-1">
             Monitor your AI agents in production
           </p>

@@ -1,5 +1,5 @@
 {
-  "name": "agentpulse-web",
+  "name": "agentbeat-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
