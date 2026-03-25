@@ -242,6 +242,12 @@ export function getCustomerPortal() {
   });
 }
 
+export function connectSlack() {
+  return apiFetch<{ slack_url: string }>("/api/slack/connect", {
+    method: "POST",
+  });
+}
+
 export function generateTelegramLink() {
   return apiFetch<{ code: string; bot_url: string }>("/api/telegram/link", {
     method: "POST",
