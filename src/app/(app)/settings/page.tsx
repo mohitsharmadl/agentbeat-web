@@ -148,8 +148,8 @@ export default function SettingsPage() {
             }}
             className="px-4 py-3 border border-gray-200 rounded-lg text-left hover:border-emerald-300 transition-colors"
           >
-            <div className="font-semibold text-gray-900">Pro — $19/mo</div>
-            <div className="text-xs text-gray-500 mt-1">100 agents, all alert channels, 30-day retention</div>
+            <div className="font-semibold text-gray-900">Pro — $49/mo <span className="text-xs text-gray-400 font-normal">($39/mo annual)</span></div>
+            <div className="text-xs text-gray-500 mt-1">10 agents, cost tracking, Telegram/Slack/Webhook, 30-day retention</div>
           </button>
           <button
             onClick={async () => {
@@ -162,8 +162,8 @@ export default function SettingsPage() {
             }}
             className="px-4 py-3 border border-gray-200 rounded-lg text-left hover:border-emerald-300 transition-colors"
           >
-            <div className="font-semibold text-gray-900">Business — $49/mo</div>
-            <div className="text-xs text-gray-500 mt-1">500 agents, team access, 90-day retention</div>
+            <div className="font-semibold text-gray-900">Team — $149/mo <span className="text-xs text-gray-400 font-normal">($119/mo annual)</span></div>
+            <div className="text-xs text-gray-500 mt-1">50 agents, advanced analytics, 10 team members, 90-day retention</div>
           </button>
         </div>
       </div>

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 const features = [
   {
@@ -66,39 +69,44 @@ const features = [
 const pricingPlans = [
   {
     name: "Free",
-    price: "$0",
+    priceMonthly: "$0",
+    priceAnnual: "$0",
     period: "forever",
     description: "For side projects and solo developers.",
-    features: ["3 agents", "Unlimited runs", "Email alerts", "7-day data retention"],
+    features: ["3 agents", "Unlimited runs", "Email alerts", "7-day retention"],
     cta: "Get Started",
     highlighted: false,
   },
   {
     name: "Pro",
-    price: "$19",
+    priceMonthly: "$49",
+    priceAnnual: "$39",
     period: "/mo",
-    description: "For teams running production agents.",
+    description: "For developers running production agents.",
     features: [
-      "100 agents",
+      "10 agents",
       "Unlimited runs",
-      "Priority alerts",
-      "All alert channels",
-      "30-day data retention",
+      "Cost tracking & budgets",
+      "Telegram, Slack, Webhook alerts",
+      "30-day retention",
+      "3 team members",
     ],
     cta: "Get Started",
     highlighted: true,
   },
   {
-    name: "Business",
-    price: "$49",
+    name: "Team",
+    priceMonthly: "$149",
+    priceAnnual: "$119",
     period: "/mo",
-    description: "For organizations with critical workloads.",
+    description: "For teams with critical agent infrastructure.",
     features: [
-      "500 agents",
+      "50 agents",
       "Unlimited runs",
-      "Team access",
+      "Advanced analytics",
       "All alert channels",
-      "90-day data retention",
+      "90-day retention",
+      "10 team members",
       "Priority support",
     ],
     cta: "Get Started",
@@ -107,6 +115,8 @@ const pricingPlans = [
 ];
 
 export default function LandingPage() {
+  const [annual, setAnnual] = useState(false);
+
   return (
     <div className="min-h-screen">
       {/* Nav */}
@@ -424,6 +434,24 @@ export default function LandingPage() {
             <p className="mt-4 text-gray-500 text-lg max-w-2xl mx-auto">
               Start free. Scale when you need to.
             </p>
+            <div className="mt-8 inline-flex items-center gap-3 bg-white rounded-full border border-gray-200 p-1">
+              <button
+                onClick={() => setAnnual(false)}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                  !annual ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                  annual ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Annual <span className="text-emerald-600 font-semibold">-20%</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -444,9 +472,12 @@ export default function LandingPage() {
                 <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                 <div className="mt-3 flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-gray-900">
-                    {plan.price}
+                    {annual ? plan.priceAnnual : plan.priceMonthly}
                   </span>
                   <span className="text-gray-500 text-sm">{plan.period}</span>
+                  {annual && plan.priceMonthly !== "$0" && (
+                    <span className="text-xs text-gray-400 line-through ml-1">{plan.priceMonthly}</span>
+                  )}
                 </div>
                 <p className="mt-3 text-sm text-gray-500">{plan.description}</p>
 
