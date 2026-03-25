@@ -69,7 +69,7 @@ const pricingPlans = [
     price: "$0",
     period: "forever",
     description: "For side projects and solo developers.",
-    features: ["10 agents", "Unlimited runs", "Email alerts", "7-day data retention"],
+    features: ["3 agents", "Unlimited runs", "Email alerts", "7-day data retention"],
     cta: "Get Started",
     highlighted: false,
   },

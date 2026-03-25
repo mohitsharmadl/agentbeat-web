@@ -47,6 +47,13 @@ export function syncUser(email: string, name: string) {
   });
 }
 
+export function googleLogin(idToken: string) {
+  return apiFetch<SyncUserResponse>("/api/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken }),
+  });
+}
+
 // Agents — matches backend model.Agent
 export interface Agent {
   id: string;
@@ -79,6 +86,23 @@ export interface DashboardOverview {
     new: number;
   };
   total_cost: number;
+}
+
+export interface CreateAgentRequest {
+  name: string;
+  slug: string;
+  description?: string;
+  expected_interval_secs?: number;
+  grace_secs?: number;
+  budget_limit_usd?: number;
+  budget_window?: string;
+}
+
+export function createAgent(data: CreateAgentRequest) {
+  return apiFetch<Agent>("/api/agents", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export function getAgents() {
@@ -201,6 +225,12 @@ export function createAlertChannel(data: {
   return apiFetch<AlertChannel>("/api/alert-channels", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+export function generateTelegramLink() {
+  return apiFetch<{ code: string; bot_url: string }>("/api/telegram/link", {
+    method: "POST",
   });
 }
 

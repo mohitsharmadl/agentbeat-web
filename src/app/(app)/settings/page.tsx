@@ -5,6 +5,7 @@ import {
   getAlertChannels,
   createAlertChannel,
   deleteAlertChannel,
+  generateTelegramLink,
 } from "@/lib/api";
 import type { AlertChannel } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -122,6 +123,28 @@ export default function SettingsPage() {
           </code>
           {apiKey && <CopyButton text={apiKey} />}
         </div>
+      </div>
+
+      {/* Quick Connect */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-8">
+        <h2 className="text-sm font-medium text-gray-700 mb-3">Quick Connect</h2>
+        <p className="text-sm text-gray-500 mb-4">Connect your Telegram account to receive alerts instantly.</p>
+        <button
+          onClick={async () => {
+            try {
+              const res = await generateTelegramLink();
+              window.open(res.bot_url, "_blank");
+            } catch {
+              alert("Failed to generate link. Please try again.");
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2AABEE] text-white rounded-lg text-sm font-medium hover:bg-[#229ED9] transition-colors"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.2-.04-.28-.02-.12.02-1.98 1.26-5.59 3.7-.53.36-1.01.54-1.43.53-.47-.01-1.38-.27-2.05-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.74 3.99-1.74 6.65-2.89 7.99-3.44 3.8-1.58 4.59-1.86 5.1-1.87.11 0 .37.03.54.17.14.12.18.28.2.46-.01.06.01.24 0 .38z"/>
+          </svg>
+          Connect Telegram
+        </button>
       </div>
 
       {/* Alert Channels */}

@@ -29,6 +29,9 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+      </head>
       <body className="min-h-full font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>
