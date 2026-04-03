@@ -80,8 +80,9 @@ const pricingPlans = [
   {
     name: "Pro",
     priceMonthly: "$49",
-    priceAnnual: "$39",
+    priceAnnual: "$470",
     period: "/mo",
+    periodAnnual: "/yr",
     description: "For developers running production agents.",
     features: [
       "10 agents",
@@ -97,8 +98,9 @@ const pricingPlans = [
   {
     name: "Team",
     priceMonthly: "$149",
-    priceAnnual: "$119",
+    priceAnnual: "$1,430",
     period: "/mo",
+    periodAnnual: "/yr",
     description: "For teams with critical agent infrastructure.",
     features: [
       "50 agents",
@@ -581,9 +583,9 @@ export default function LandingPage() {
                   <span className="text-5xl font-bold text-gray-900 tracking-tight">
                     {annual ? plan.priceAnnual : plan.priceMonthly}
                   </span>
-                  <span className="text-gray-500 text-sm font-medium">{plan.period}</span>
+                  <span className="text-gray-500 text-sm font-medium">{annual && plan.periodAnnual ? plan.periodAnnual : plan.period}</span>
                   {annual && plan.priceMonthly !== "$0" && (
-                    <span className="text-xs text-gray-400 line-through ml-1">{plan.priceMonthly}</span>
+                    <span className="text-xs text-gray-400 line-through ml-1">{plan.priceMonthly}/mo</span>
                   )}
                 </div>
                 <p className="mt-3 text-sm text-gray-500">{plan.description}</p>
